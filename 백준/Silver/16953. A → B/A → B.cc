@@ -6,24 +6,22 @@ using namespace std;
 
 int main()
 {
-    long long startNum, targetNum;
+    int startNum, targetNum;
 
-    cin >> startNum >> targetNum;
+    cin >> targetNum >> startNum;
 
     int result = -1;
     bool findFlag = false;
 
-    queue<pair<long long, int>> q;
+    queue<pair<int, int>> q;
 
     q.push(make_pair(startNum, 1));
 
     while (q.size() != 0)
     {
         auto curPair = q.front(); q.pop();
-        long long curNum = curPair.first;
+        int curNum = curPair.first;
         int curCnt = curPair.second;
-
-        // cout << curNum << ", " << curCnt << endl;
 
         if (curNum == targetNum)
         {
@@ -32,14 +30,14 @@ int main()
         }
 
         // 새로운 숫자를 큐에 추가
-        long long num1 = (curNum * 2);
-        long long num2 = (curNum * 10 + 1);
-        if (num1 <= targetNum)
+        int num1 = (curNum / 2);
+        int num2 = ((curNum - 1) / 10);
+        if ((curNum % 2 == 0) && num1 >= targetNum)
         {
             q.push(make_pair(num1, curCnt+1));
         }
 
-        if (num2 <= targetNum)
+        if ((curNum % 10 == 1) && num2 >= targetNum)
         {
             q.push(make_pair(num2, curCnt+1));
         }
