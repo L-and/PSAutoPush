@@ -1,64 +1,60 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <map>
 #include <iostream>
 using namespace std;
 
-bool compare(pair<long long, long long>& a, pair<long long, long long>& b)
+bool compareByTime(const pair<int, int>& a, const pair<int, int>& b)
 {
     return a.second < b.second;
 }
 
 int solution(vector<int> food_times, long long k)
 {
-    // 다 먹을시간이 되는지 체크
-    long long totalTimes = 0; 
-    for (long long i=0; i<food_times.size(); i++) totalTimes += food_times[i];    
-    if (totalTimes <= k) 
-        return -1;
+    long long totalTime = 0;
+    for (int t : food_times) totalTime += t;
+    if (totalTime <= k) return -1;
 
-    // (테이블번호 : 먹는시간) 으로 map생성 후 오름차순 정렬
-    vector<pair<long long, long long>> tableTimes;
-    for (long long i=0; i<food_times.size(); i++)
+    int n = food_times.size();
+
+    // (index, time) 쌍 정렬
+    vector<pair<int, int>> food;
+    for (int i = 0; i < n; ++i)
+        food.emplace_back(i, food_times[i]);
+
+    sort(food.begin(), food.end(), compareByTime);
+
+    long long prevTime = 0;
+    int idx = 0;
+    int remaining = n;
+
+    while (idx < n)
     {
-        tableTimes.push_back(make_pair(i, food_times[i]));
+        long long currTime = food[idx].second;
+        long long diff = currTime - prevTime;
+        long long consume = diff * remaining;
+
+        if (k < consume) break;
+
+        k -= consume;
+        prevTime = currTime;
+
+        // upper_bound로 다음 group 위치 찾기
+        auto it = upper_bound(food.begin() + idx, food.end(), currTime,
+            [](int value, const pair<int, int>& p) {
+                return value < p.second;
+            });
+
+        int nextIdx = it - food.begin();
+        remaining -= (nextIdx - idx);
+        idx = nextIdx;
     }
 
-    sort(tableTimes.begin(), tableTimes.end(), compare);
-    
-    long long currSize = food_times.size();
+    // 남은 음식들 원래 인덱스 기준 정렬
+    vector<int> result;
+    for (int i = idx; i < n; ++i)
+        result.push_back(food[i].first);
+    sort(result.begin(), result.end());
 
-    
-    long long i=0;
-    long long currTimes = tableTimes[0].second;
-    long long prevTime = currTimes;
-    long long eatTimes = currSize * currTimes;
-    
-    while (k >= eatTimes)
-    {
-        k -= eatTimes;
-        
-        prevTime = tableTimes[i].second;
-        while(currSize > 1 && i < food_times.size() && tableTimes[i].second == prevTime) 
-        {
-            i++;
-            currSize--;
-        }
-
-        currTimes = tableTimes[i].second - prevTime;
-        eatTimes = currSize * currTimes;
-    }
-
-    vector<long long> lastTable;
-    for (long long tableIndex = i; tableIndex < food_times.size(); tableIndex++)
-    {
-        lastTable.push_back(tableTimes[tableIndex].first);
-    }
-    sort(lastTable.begin(), lastTable.end());
-
-
-    int result = (lastTable[(k%lastTable.size())] + 1);
-
-    return result;
+    return result[k % result.size()] + 1;
 }
